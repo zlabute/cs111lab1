@@ -13,6 +13,14 @@ int main(int argc, char *argv[])
 		exit(EINVAL);
 	}
 
+	for(int i = 1; i < argc; i++) {
+        if (access(argv[i], X_OK) == -1) {
+            perror("access");
+            fprintf(stderr, "Invalid command: %s\n", argv[i]);
+            exit(EXIT_FAILURE);
+        }
+    }
+
 	int prev_pipe[2];
 	int next_pipe[2];
 
@@ -29,7 +37,7 @@ int main(int argc, char *argv[])
 		if(pid == -1)  // fork failiure
 		{
 			perror("fork");
-			exit(errno);
+			exit(EXIT_FAILURE);
 		}
 		else if (pid == 0) // child processes
 		{
@@ -55,7 +63,7 @@ int main(int argc, char *argv[])
 
 			execlp(argv[i], argv[i], NULL); // executes the executable
 			//perror("execlp"); // writes any error that occurs to errno
-			exit(EINVAL); // exits with errno if error occured continues if not
+			exit(EXIT_FAILURE); // exits with errno if error occured continues if not
 		}
 		else // parent process
 		{
