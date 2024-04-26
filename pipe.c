@@ -15,6 +15,7 @@ int main(int argc, char *argv[])
 
 	int prev_pipe[2];
 	int next_pipe[2];
+	int pids[argc - 1];
 
 	for(int i = 1; i < argc; i++) { // loop through arguments
 
@@ -24,14 +25,14 @@ int main(int argc, char *argv[])
 			exit(errno);
 		}
 
-		pid_t pid = fork();
+		pids[i] = fork();
 
-		if(pid == -1)  // fork failiure
+		if(pids[i] == -1)  // fork failiure
 		{
 			perror("fork");
 			exit(EXIT_FAILURE);
 		}
-		else if (pid == 0) // child processes
+		else if (pids[i] == 0) // child processes
 		{
 			if (i > 1) // skips over argv[0] as this is ./pipe
 			{
@@ -77,12 +78,17 @@ int main(int argc, char *argv[])
 	
 	for (int i =1; i < argc; i++) { //wait for child processes to finish
 		int status;
-        wait(&status);
-        if (!WIFEXITED(status) || WEXITSTATUS(status) != 0) {
-            fprintf(stderr, "Child process failed with exit status: %d\n", WEXITSTATUS(status));
-            // Handle the failure here
-            // You can also set a non-zero exit status for the parent process if needed
-        }
+
+		if (waitpid(pids[i],&status,0) == -1) {
+			exit(EXIT_FAILURE);
+		}
+		if (WIFEXITED(status)){
+			WEXITSTATUS(status);
+		}
+		else
+		{
+			exit(EXIT_FAILURE);
+		}
 	}
 
 	return 0;
