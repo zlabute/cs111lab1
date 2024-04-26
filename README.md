@@ -1,17 +1,29 @@
-## UID: 123456789
+## UID: 506057506
 
 ## Pipe Up
 
-One sentence description
+This program acts as the pipeline operator between each of the arguments, which should be shell commands following ./pipe but does not handle flags and other inputs necesarily.
 
 ## Building
 
-Explain briefly how to build your program
+To build the program simply run the following command:
+
+make
+
+and then you are able to execute the program.
 
 ## Running
 
-Show an example run of your program, using at least two additional arguments, and what to expect
+Run the program by calling the executable
+
+i.e.
+
+./pipe ls cat
+
+should output a list of all files in the current directory
 
 ## Cleaning up
 
-Explain briefly how to clean up all binary files
+To clean up the binary files run:
+
+make clean
