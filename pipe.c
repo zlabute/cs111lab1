@@ -13,14 +13,6 @@ int main(int argc, char *argv[])
 		exit(EINVAL);
 	}
 
-	for(int i = 1; i < argc; i++) {
-        if (access(argv[i], X_OK) == -1) {
-            perror("access");
-            fprintf(stderr, "Invalid command: %s\n", argv[i]);
-            exit(EXIT_FAILURE);
-        }
-    }
-
 	int prev_pipe[2];
 	int next_pipe[2];
 
@@ -84,7 +76,13 @@ int main(int argc, char *argv[])
 
 	
 	for (int i =1; i < argc; i++) { //wait for child processes to finish
-		wait(NULL);
+		int status;
+        wait(&status);
+        if (!WIFEXITED(status) || WEXITSTATUS(status) != 0) {
+            fprintf(stderr, "Child process failed with exit status: %d\n", WEXITSTATUS(status));
+            // Handle the failure here
+            // You can also set a non-zero exit status for the parent process if needed
+        }
 	}
 
 	return 0;
