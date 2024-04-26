@@ -13,85 +13,173 @@ int main(int argc, char *argv[])
 		exit(EINVAL);
 	}
 
+	pid_t pids[argc - 1];
+	int curr_pipe[2];
 	int prev_pipe[2];
-	int next_pipe[2];
-	int pids[argc - 1];
 
-	for(int i = 1; i < argc; i++) { // loop through arguments
-
-
-		if (i < argc - 1 && pipe(next_pipe) == -1) {
+	for (int i = 0; i < argc-1; i++)
+	{
+		if (i < argc - 2 && pipe(curr_pipe) == -1)
+		{
 			perror("pipe");
 			exit(errno);
 		}
 
 		pids[i] = fork();
-
-		if(pids[i] == -1)  // fork failiure
+		if(pids[i] < 0)
 		{
-			perror("fork");
 			exit(EXIT_FAILURE);
 		}
-		else if (pids[i] == 0) // child processes
+		else if(pids[i] == 0) // child process
 		{
-			if (i > 1) // skips over argv[0] as this is ./pipe
+			if(i < argc - 2) // redirect output to curr_pipe besides last
+			{
+				close(curr_pipe[0]);
+				dup2(curr_pipe[1], 1);
+				close(curr_pipe[1]);
+			}
+
+			if(i > 0) //redirect input to output of prev_pipe
 			{
 				close(prev_pipe[1]);
-				dup2(prev_pipe[0], STDIN_FILENO);  // redirect input to read the end of pipe
-				close(prev_pipe[0]);  				// close read end of pipe after putting into standard input
+				dup2(prev_pipe[0], 0);
+				close(prev_pipe[0]);
 			}
 
-			if (i < argc - 1)  // if not last argument
-			{
-				close(next_pipe[0]);
-				dup2(next_pipe[1], STDOUT_FILENO); // redirect output to write end of pipe
-				close(next_pipe[1]); // close the write end of pipe after writing STDOUT into write end
-			}
-
-			// if (access(argv[i], X_OK) == -1)
-			// {
-			// 	perror("access");
-			// 	exit(ENOENT);
-			// }
-
-			execlp(argv[i], argv[i], NULL); // executes the executable
-			//perror("execlp"); // writes any error that occurs to errno
-			exit(EXIT_FAILURE); // exits with errno if error occured continues if not
+			execlp(argv[i+1], argv[i+1], NULL);
+			exit(EXIT_FAILURE);
 		}
-		else // parent process
+		else
 		{
-			if ( i > 1)
+			if( i > 0) //if not first proccess close prev_pipe
 			{
 				close(prev_pipe[0]);
 				close(prev_pipe[1]);
 			}
-
-
-			if ( i < argc - 1)
+			if(i != argc - 2)
 			{
-				prev_pipe[0] = next_pipe[0];
-				prev_pipe[1] = next_pipe[1];
+				prev_pipe[0] = curr_pipe[0];
+				prev_pipe[1] = curr_pipe[1];
 			}
 		}
 	}
 
-	
-	for (int i =1; i < argc; i++) { //wait for child processes to finish
+	for(int i = 0; i < argc - 1; i++)
+	{
 		int status;
-
-		if (waitpid(pids[i],&status,0) == -1) {
+		if(waitpid(pids[i], &status, 0) == -1)
+		{
 			exit(EXIT_FAILURE);
 		}
-		if (WIFEXITED(status)){
-			WEXITSTATUS(status);
-		}
-		else
+		if(WIFEXITED(status))
 		{
+			WEXITSTATUS(status);
+			if(WEXITSTATUS(status) != 0)
+			{
+				exit(WEXITSTATUS(status));
+			}
+		}
+		else{
 			exit(EXIT_FAILURE);
 		}
 	}
 
+
+
 	return 0;
+
+
+
+
+
+
+
+
+//  // working code
+// 	int prev_pipe[2];
+// 	int next_pipe[2];
+// 	int pids[argc-1];
+
+// 	for(int i = 1; i < argc; i++) { // loop through arguments
+
+
+// 		if (i < argc - 1 && pipe(next_pipe) == -1) {
+// 			perror("pipe");
+// 			exit(errno);
+// 		}
+
+// 		pids[i-1] = fork();
+
+// 		if(pids[i-1] == -1)  // fork failiure
+// 		{
+// 			perror("fork");
+// 			exit(EXIT_FAILURE);
+// 		}
+// 		else if (pids[i-1] == 0) // child processes
+// 		{
+// 			if (i > 1) // skips over argv[0] as this is ./pipe
+// 			{
+// 				close(prev_pipe[1]);
+// 				dup2(prev_pipe[0], STDIN_FILENO);  // redirect input to read the end of pipe
+// 				close(prev_pipe[0]);  				// close read end of pipe after putting into standard input
+// 			}
+
+// 			if (i < argc - 1)  // if not last argument
+// 			{
+// 				close(next_pipe[0]);
+// 				dup2(next_pipe[1], STDOUT_FILENO); // redirect output to write end of pipe
+// 				close(next_pipe[1]); // close the write end of pipe after writing STDOUT into write end
+// 			}
+
+// 			// if (access(argv[i], X_OK) == -1)
+// 			// {
+// 			// 	perror("access");
+// 			// 	exit(ENOENT);
+// 			// }
+
+// 			execlp(argv[i], argv[i], NULL); // executes the executable
+// 			//perror("execlp"); // writes any error that occurs to errno
+// 			exit(EXIT_FAILURE); // exits with errno if error occured continues if not
+// 		}
+// 		else // parent process
+// 		{
+// 			if ( i > 1)
+// 			{
+// 				close(prev_pipe[0]);
+// 				close(prev_pipe[1]);
+// 			}
+
+// 			if (i == argc -1 )
+// 			{
+// 				close(next_pipe[0]);
+// 				close(next_pipe[1]);
+// 			}
+
+
+// 			if ( i < argc - 1)
+// 			{
+// 				prev_pipe[0] = next_pipe[0];
+// 				prev_pipe[1] = next_pipe[1];
+// 			}
+// 		}
+// 	}
+
+	
+// 	for (int i =1; i < argc; i++) { //wait for child processes to finish
+// 		int status;
+// 		if (waitpid(pids[i-1],&status,0) == -1) {
+// 			exit(EINVAL);
+// 		}
+// 		if (WIFEXITED(status)){
+// 			WEXITSTATUS(status);
+// 		}
+// 		else
+// 		{
+// 			exit(EXIT_FAILURE);
+// 		}
+// 	}
+
+// 	return 0;
 
 	// int fd[2];
 
