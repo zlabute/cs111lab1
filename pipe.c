@@ -47,9 +47,15 @@ int main(int argc, char *argv[])
 				close(next_pipe[1]); // close the write end of pipe after writing STDOUT into write end
 			}
 
+			// if (access(argv[i], X_OK) == -1)
+			// {
+			// 	perror("access");
+			// 	exit(ENOENT);
+			// }
+
 			execlp(argv[i], argv[i], NULL); // executes the executable
 			//perror("execlp"); // writes any error that occurs to errno
-			exit(errno); // exits with errno if error occured continues if not
+			exit(EINVAL); // exits with errno if error occured continues if not
 		}
 		else // parent process
 		{
@@ -166,26 +172,26 @@ int main(int argc, char *argv[])
 
 
 
-	int return_code = fork();
-	if(return_code == 0){
-		printf("This is the child process!\n");
-		execlp("ls","ls","-a","-l",NULL);
-		exit(0);
+	// int return_code = fork();
+	// if(return_code == 0){
+	// 	printf("This is the child process!\n");
+	// 	execlp("ls","ls","-a","-l",NULL);
+	// 	exit(0);
 
-	}
-	else if(return_code > 0){
-		printf("I am lazy parent, letting my child to ls the directory\n");
-		printf("I will just wait for their report\n");
-		int pid = return_code;
-		int status = 0;
-		waitpid(pid, &status, 0);
-		printf("Child process exots with code: %d\n", WEXITSTATUS(status));
-	}
-	else{
-		printf("Child process creatiion error! \n");
-	}
-	printf("They finished; Done!\n");
-	return 0;
+	// }
+	// else if(return_code > 0){
+	// 	printf("I am lazy parent, letting my child to ls the directory\n");
+	// 	printf("I will just wait for their report\n");
+	// 	int pid = return_code;
+	// 	int status = 0;
+	// 	waitpid(pid, &status, 0);
+	// 	printf("Child process exots with code: %d\n", WEXITSTATUS(status));
+	// }
+	// else{
+	// 	printf("Child process creatiion error! \n");
+	// }
+	// printf("They finished; Done!\n");
+	// return 0;
 
 
 	// for(int i = 1; i < argc; i++)
