@@ -47,7 +47,7 @@ int main(int argc, char *argv[])
 			}
 
 			execlp(argv[i+1], argv[i+1], NULL);
-			exit(EXIT_FAILURE);
+			exit(EINVAL);
 		}
 		else
 		{
